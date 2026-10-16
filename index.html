@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOEIC 單字練習</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --line: #e3e5e8;
+    --soft: #f5f6f8;
+    --accent: #1f4e8c;
+    --accent-soft: #e9eff8;
+    --ok: #1a7f37;
+    --ok-soft: #e8f5ec;
+    --bad: #c62828;
+    --bad-soft: #fdeded;
+    --warn: #9a6700;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    font-size: 16px; line-height: 1.6;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+  header { position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--line); z-index: 10; }
+  .top { padding: 12px 0 0; }
+  h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  nav { display: flex; gap: 2px; overflow-x: auto; margin-top: 4px; }
+  nav button {
+    background: none; border: 0; border-bottom: 2px solid transparent;
+    padding: 8px 12px; font: inherit; color: var(--muted); cursor: pointer; white-space: nowrap;
+  }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  main { padding: 20px 0 64px; }
+  h2 { font-size: 20px; margin: 0 0 16px; font-weight: 600; }
+  h3 { font-size: 16px; margin: 24px 0 8px; font-weight: 600; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font: inherit; padding: 10px 18px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.secondary { background: var(--bg); color: var(--accent); }
+  .btn.secondary:hover { background: var(--accent-soft); filter: none; }
+  .btn.plain { background: var(--bg); color: var(--text); border-color: var(--line); }
+  .btn.plain:hover { background: var(--soft); filter: none; }
+  .btn.danger { background: var(--bg); color: var(--bad); border-color: var(--bad); }
+  .btn.small { padding: 4px 10px; font-size: 14px; }
+  .btn:disabled { opacity: .45; cursor: default; filter: none; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .linkbtn { background: none; border: 0; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; padding: 4px; }
+  .linkbtn:hover { color: var(--text); text-decoration: underline; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .stat .num { font-size: 28px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: 14px; color: var(--muted); }
+
+  .topic-list { display: grid; gap: 10px; }
+  .topic-row { display: grid; grid-template-columns: 6.5em 1fr 5.5em; gap: 10px; align-items: center; font-size: 14px; }
+  .bar { height: 8px; background: var(--soft); border-radius: 4px; position: relative; overflow: hidden; }
+  .bar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+  .bar .seen { background: #b7c8e3; }
+  .bar .known { background: var(--accent); }
+  .topic-row .cnt { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+  label.field { display: block; margin-bottom: 14px; }
+  label.field > span { display: block; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+  select {
+    font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--text); min-width: 12em; max-width: 100%;
+  }
+  .checks { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  .checks label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+  .panel { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+
+  .progress-line { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 12px; min-height: 280px; padding: 28px 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    cursor: pointer; user-select: none; background: var(--bg);
+  }
+  .card:hover { border-color: #c9ced6; }
+  .word { font-size: 34px; font-weight: 600; letter-spacing: .2px; }
+  .pos { color: var(--muted); font-size: 15px; font-style: italic; }
+  .card .hint { margin-top: 24px; font-size: 14px; color: var(--muted); }
+  .back { margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--line); width: 100%; }
+  .zh { font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+  .ex { font-size: 16px; }
+  .exzh { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .speak {
+    display: inline-flex; align-items: center; gap: 4px; background: none; border: 1px solid var(--line);
+    border-radius: 6px; padding: 2px 8px; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer; vertical-align: middle;
+  }
+  .speak:hover { color: var(--accent); border-color: var(--accent); }
+  .speak svg { width: 14px; height: 14px; }
+  .grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .grade .btn { width: 100%; }
+  .grade .again { background: var(--bg); color: var(--bad); border-color: #e6b3b3; }
+  .grade .hard { background: var(--bg); color: var(--warn); border-color: #e3cf9c; }
+  .grade .good { background: var(--bg); color: var(--ok); border-color: #a9d5b6; }
+  .grade .btn:hover { background: var(--soft); filter: none; }
+  kbd { font-family: inherit; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+
+  .qtype { font-size: 13px; color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 8px; }
+  .prompt { font-size: 26px; font-weight: 600; margin: 20px 0 6px; }
+  .prompt.sentence { font-size: 19px; font-weight: 500; line-height: 1.7; }
+  .blank { display: inline-block; min-width: 4.5em; border-bottom: 2px solid var(--text); text-align: center; padding: 0 4px; }
+  .blank.filled { color: var(--ok); border-bottom-color: var(--ok); }
+  .options { display: grid; gap: 8px; margin-top: 18px; }
+  .opt {
+    display: flex; align-items: center; gap: 10px; text-align: left; width: 100%;
+    font: inherit; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); cursor: pointer;
+  }
+  .opt:hover:not(:disabled) { background: var(--soft); }
+  .opt:disabled { cursor: default; }
+  .opt .k { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; min-width: 20px; text-align: center; }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+  .feedback { margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: var(--soft); font-size: 15px; }
+  .feedback .res { font-weight: 600; }
+  .feedback .res.ok { color: var(--ok); }
+  .feedback .res.bad { color: var(--bad); }
+  .next-row { margin-top: 14px; display: flex; justify-content: flex-end; }
+
+  .score { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  table.list { width: 100%; border-collapse: collapse; font-size: 15px; }
+  table.list th, table.list td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.list th { font-size: 13px; color: var(--muted); font-weight: 500; }
+  table.list td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
+  .tabs button { font: inherit; font-size: 14px; border: 0; background: var(--bg); padding: 6px 14px; cursor: pointer; color: var(--muted); }
+  .tabs button + button { border-left: 1px solid var(--line); }
+  .tabs button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .empty { text-align: center; padding: 40px 0; color: var(--muted); }
+
+  @media (max-width: 520px) {
+    .stats { gap: 8px; }
+    .stat { padding: 10px 12px; }
+    .stat .num { font-size: 22px; }
+    .word { font-size: 28px; }
+    .prompt { font-size: 22px; }
+    .prompt.sentence { font-size: 17px; }
+    .topic-row { grid-template-columns: 5.5em 1fr 4.5em; }
+    .hide-sm { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <h1>TOEIC 單字練習</h1>
+    <nav id="nav">
+      <button data-act="go" data-view="home">首頁</button>
+      <button data-act="go" data-view="cards">單字卡</button>
+      <button data-act="go" data-view="quiz">測驗</button>
+      <button data-act="go" data-view="mistakes">錯題本</button>
+      <button data-act="go" data-view="settings">設定</button>
+    </nav>
+  </div>
+</header>
+<main class="wrap" id="view"></main>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+
+<script src="data/words.js"></script>
+<script src="data/preps.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---------- 資料 ----------
+  const WORDS = window.WORDS || [];
+  const PREPS = window.PREPS || [];
+  const ITEM = {};
+  WORDS.forEach(w => { ITEM[w.id] = Object.assign({ kind: 'word' }, w); });
+  PREPS.forEach(p => { ITEM[p.id] = Object.assign({ kind: 'prep' }, p); });
+  const TOPICS = [...new Set(WORDS.map(w => w.topic))];
+
+  // ---------- 儲存 ----------
+  const PKEY = 'toeic_progress_v1';
+  const SKEY = 'toeic_settings_v1';
+  function loadJSON(key, fallback) {
+    try {
+      const s = localStorage.getItem(key);
+      const v = s ? JSON.parse(s) : null;
+      return v && typeof v === 'object' && !Array.isArray(v) ? v : fallback;
+    } catch (e) { return fallback; }
+  }
+  function saveJSON(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* 無法儲存時照常使用 */ }
+  }
+  let progress = loadJSON(PKEY, {});
+  let settings = Object.assign({ count: 20, autoSpeak: false }, loadJSON(SKEY, {}));
+
+  // ---------- 間隔複習（Leitner 5 格）----------
+  // 第 1~5 格的下次複習間隔（天）
+  const INTERVALS = [0, 1, 3, 7, 14];
+  function fmtDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function today() { return fmtDate(new Date()); }
+  function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); return fmtDate(d); }
+
+  // result: 'good' 會了／答對、'hard' 模糊、'again' 不會／答錯
+  function grade(id, result) {
+    const p = progress[id] || { box: 0, wrong: 0 };
+    if (result === 'good') p.box = Math.min(5, Math.max(1, p.box) + 1);
+    else if (result === 'again') { p.box = 1; p.wrong = (p.wrong || 0) + 1; }
+    else p.box = Math.max(1, p.box);
+    p.due = addDays(INTERVALS[p.box - 1]);
+    p.last = today();
+    progress[id] = p;
+    saveJSON(PKEY, progress);
+  }
+  const isNew = id => !progress[id];
+  const isDue = id => !!progress[id] && progress[id].due <= today();
+  const isKnown = id => !!progress[id] && progress[id].box >= 4;
+  const wordIds = topic => WORDS.filter(w => !topic || w.topic === topic).map(w => w.id);
+
+  // ---------- 工具 ----------
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  // 到期 → 沒學過 → 其他，同一組內隨機
+  function byPriority(ids) {
+    const rank = id => isDue(id) ? 0 : isNew(id) ? 1 : 2;
+    return shuffle(ids.slice()).sort((a, b) => rank(a) - rank(b));
+  }
+
+  // ---------- 發音 ----------
+  const canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  let voice = null;
+  function pickVoice() {
+    const vs = speechSynthesis.getVoices();
+    voice = vs.find(v => v.lang === 'en-US') || vs.find(v => /^en/i.test(v.lang)) || null;
+  }
+  if (canSpeak) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function speak(text) {
+    if (!canSpeak) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    if (voice) u.voice = voice;
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }
+  const SPK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
+  const speakBtn = (text, label) => canSpeak
+    ? '<button class="speak" data-say="' + esc(text) + '" title="播放發音">' + SPK + (label || '發音') + '</button>'
+    : '';
+
+  // ---------- 畫面狀態 ----------
+  const state = {
+    view: 'home',
+    cards: { phase: 'setup', topic: '', deck: [], i: 0, flipped: false, requeued: {}, tally: { again: 0, hard: 0, good: 0 } },
+    quiz: { phase: 'setup', topic: '', types: { en2zh: true, zh2en: true, prep: true }, qs: [], i: 0, chosen: null, right: 0, wrongIds: [] },
+    mistakeFilter: 'all'
+  };
+  const view = document.getElementById('view');
+
+  function render() {
+    document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === state.view));
+    const fn = { home: renderHome, cards: renderCards, quiz: renderQuiz, mistakes: renderMistakes, settings: renderSettings }[state.view];
+    view.innerHTML = fn();
+  }
+
+  // ---------- 首頁 ----------
+  function renderHome() {
+    const all = Object.keys(ITEM);
+    const due = all.filter(isDue);
+    const dueWords = due.filter(id => ITEM[id].kind === 'word').length;
+    const duePreps = due.length - dueWords;
+    const seen = all.filter(id => !isNew(id)).length;
+    const mistakes = all.filter(id => progress[id] && progress[id].wrong > 0).length;
+
+    let rows = TOPICS.map(t => {
+      const ids = wordIds(t);
+      const s = ids.filter(id => !isNew(id)).length;
+      const k = ids.filter(isKnown).length;
+      return '<div class="topic-row"><span>' + esc(t) + '</span>' +
+        '<div class="bar"><span class="seen" style="width:' + (s / ids.length * 100) + '%"></span>' +
+        '<span class="known" style="width:' + (k / ids.length * 100) + '%"></span></div>' +
+        '<span class="cnt">' + k + ' / ' + ids.length + '</span></div>';
+    }).join('');
+    const pIds = PREPS.map(p => p.id);
+    const ps = pIds.filter(id => !isNew(id)).length, pk = pIds.filter(isKnown).length;
+    rows += '<div class="topic-row"><span>介係詞</span><div class="bar">' +
+      '<span class="seen" style="width:' + (ps / pIds.length * 100) + '%"></span>' +
+      '<span class="known" style="width:' + (pk / pIds.length * 100) + '%"></span></div>' +
+      '<span class="cnt">' + pk + ' / ' + pIds.length + '</span></div>';
+
+    return '<div class="stats">' +
+        '<div class="stat"><div class="num">' + due.length + '</div><div class="lbl">今日待複習</div></div>' +
+        '<div class="stat"><div class="num">' + seen + '<span class="muted small"> / ' + all.length + '</span></div><div class="lbl">已學過</div></div>' +
+        '<div class="stat"><div class="num">' + mistakes + '</div><div class="lbl">錯題</div></div>' +
+      '</div>' +
+      '<div class="row" style="margin-bottom:28px">' +
+        '<button class="btn" data-act="home-cards">複習單字卡' + (dueWords ? '（' + dueWords + '）' : '') + '</button>' +
+        '<button class="btn secondary" data-act="home-preps">介係詞練習' + (duePreps ? '（' + duePreps + '）' : '') + '</button>' +
+      '</div>' +
+      '<h3>各主題進度</h3>' +
+      '<div class="topic-list">' + rows + '</div>' +
+      '<div class="legend"><span><i style="background:#b7c8e3"></i>學過</span><span><i style="background:var(--accent)"></i>已熟記（右側數字）</span></div>';
+  }
+
+  // ---------- 單字卡 ----------
+  function cardsCounts(topic) {
+    const ids = wordIds(topic);
+    return { due: ids.filter(isDue).length, fresh: ids.filter(isNew).length };
+  }
+  function buildDeck(topic, free) {
+    const ids = wordIds(topic);
+    if (free) return shuffle(ids).slice(0, settings.count);
+    const due = shuffle(ids.filter(isDue));
+    const fresh = ids.filter(isNew);
+    return due.concat(fresh).slice(0, settings.count);
+  }
+  function startCards(topic, free) {
+    const c = state.cards;
+    c.topic = topic;
+    c.deck = buildDeck(topic, free);
+    if (!c.deck.length) { c.phase = 'setup'; render(); return; }
+    c.phase = 'run'; c.i = 0; c.flipped = false; c.requeued = {}; c.tally = { again: 0, hard: 0, good: 0 };
+    state.view = 'cards';
+    render();
+    autoSpeakCurrent();
+  }
+  function autoSpeakCurrent() {
+    const c = state.cards;
+    if (settings.autoSpeak && c.phase === 'run' && c.deck[c.i]) speak(ITEM[c.deck[c.i]].word);
+  }
+  function renderCards() {
+    const c = state.cards;
+    if (c.phase === 'setup') {
+      const n = cardsCounts(c.topic);
+      const opts = '<option value="">全部主題</option>' + TOPICS.map(t => '<option' + (t === c.topic ? ' selected' : '') + '>' + esc(t) + '</option>').join('');
+      const nothing = n.due + n.fresh === 0;
+      return '<h2>單字卡</h2>' +
+        '<label class="field"><span>主題</span><select data-bind="cards-topic">' + opts + '</select></label>' +
+        '<p class="muted small">這個範圍：待複習 ' + n.due + ' 個、還沒學過 ' + n.fresh + ' 個。每輪最多 ' + settings.count + ' 張（可在設定調整）。</p>' +
+        (nothing ? '<p class="small">這個範圍今天沒有要複習的單字了，可以用自由練習多看幾遍。</p>' : '') +
+        '<div class="row">' +
+          '<button class="btn" data-act="cards-start"' + (nothing ? ' disabled' : '') + '>開始</button>' +
+          '<button class="btn secondary" data-act="cards-free">自由練習（隨機）</button>' +
+        '</div>' +
+        '<p class="muted small" style="margin-top:20px">操作：點卡片或按空白鍵翻面，翻面後按 1 不會、2 模糊、3 會了。</p>';
+    }
+    if (c.phase === 'done') {
+      const t = c.tally;
+      return '<h2>這輪完成</h2>' +
+        '<p>會了 ' + t.good + '、模糊 ' + t.hard + '、不會 ' + t.again + '。</p>' +
+        '<p class="muted small">標記「不會」的字已加入錯題本，今天之內會再出現在待複習。</p>' +
+        '<div class="row"><button class="btn" data-act="cards-again">再一輪</button>' +
+        '<button class="btn plain" data-act="go" data-view="home">回首頁</button></div>';
+    }
+    const w = ITEM[c.deck[c.i]];
+    let html = '<div class="progress-line"><span>' + (c.i + 1) + ' / ' + c.deck.length + '　' + esc(w.topic) + '</span>' +
+      '<button class="linkbtn" data-act="cards-quit">結束這輪</button></div>' +
+      '<div class="card" data-act="flip">' +
+        '<div class="word">' + esc(w.word) + '</div>' +
+        '<div><span class="pos">' + esc(w.pos) + '</span> ' + speakBtn(w.word) + '</div>';
+    if (c.flipped) {
+      html += '<div class="back"><div class="zh">' + esc(w.zh) + '</div>' +
+        '<div class="ex">' + esc(w.example) + ' ' + speakBtn(w.example, '例句') + '</div>' +
+        '<div class="exzh">' + esc(w.exampleZh) + '</div></div>';
+    } else {
+      html += '<div class="hint">點擊翻面</div>';
+    }
+    html += '</div>';
+    if (c.flipped) {
+      html += '<div class="grade">' +
+        '<button class="btn again" data-act="grade" data-r="again">不會<kbd>1</kbd></button>' +
+        '<button class="btn hard" data-act="grade" data-r="hard">模糊<kbd>2</kbd></button>' +
+        '<button class="btn good" data-act="grade" data-r="good">會了<kbd>3</kbd></button></div>';
+    }
+    return html;
+  }
+  function flipCard() {
+    const c = state.cards;
+    if (c.phase !== 'run' || c.flipped) return;
+    c.flipped = true;
+    render();
+  }
+  function gradeCard(r) {
+    const c = state.cards;
+    if (c.phase !== 'run' || !c.flipped) return;
+    const id = c.deck[c.i];
+    grade(id, r);
+    c.tally[r]++;
+    // 不會的字在這輪最後再出現一次
+    if (r === 'again' && !c.requeued[id]) { c.requeued[id] = true; c.deck.push(id); }
+    c.i++;
+    c.flipped = false;
+    if (c.i >= c.deck.length) c.phase = 'done';
+    render();
+    autoSpeakCurrent();
+  }
+
+  // ---------- 測驗 ----------
+  const TYPE_NAME = { en2zh: '英翻中', zh2en: '中翻英', prep: '介係詞' };
+  function distractors(w, n) {
+    const out = [], zhs = new Set([w.zh]), ws = new Set([w.word]);
+    const tiers = [
+      WORDS.filter(x => x.topic === w.topic && x.pos === w.pos),
+      WORDS.filter(x => x.pos === w.pos),
+      WORDS
+    ];
+    for (const tier of tiers) {
+      for (const x of shuffle(tier.slice())) {
+        if (out.length >= n) break;
+        if (zhs.has(x.zh) || ws.has(x.word)) continue;
+        zhs.add(x.zh); ws.add(x.word); out.push(x);
+      }
+      if (out.length >= n) break;
+    }
+    return out;
+  }
+  function makeQuestion(id, type) {
+    const it = ITEM[id];
+    if (it.kind === 'prep') {
+      return { id, type: 'prep', sentence: it.sentence, options: shuffle(it.options.slice()), answer: it.answer, note: it.note };
+    }
+    const ds = distractors(it, 3);
+    if (type === 'en2zh') {
+      return { id, type, prompt: it.word, pos: it.pos, options: shuffle([it.zh].concat(ds.map(d => d.zh))), answer: it.zh };
+    }
+    return { id, type: 'zh2en', prompt: it.zh, pos: it.pos, options: shuffle([it.word].concat(ds.map(d => d.word))), answer: it.word };
+  }
+  function pickWordType(types) {
+    const t = ['en2zh', 'zh2en'].filter(k => types[k]);
+    return t.length ? t[Math.floor(Math.random() * t.length)] : (Math.random() < .5 ? 'en2zh' : 'zh2en');
+  }
+  function startQuiz(opts) {
+    const q = state.quiz;
+    let ids;
+    if (opts && opts.ids) {
+      ids = shuffle(opts.ids.slice());
+    } else {
+      // 依勾選的題型平均分配題數（例如三種都勾，介係詞約占 1/3）
+      const wordTypes = (q.types.en2zh ? 1 : 0) + (q.types.zh2en ? 1 : 0);
+      const typeCount = wordTypes + (q.types.prep ? 1 : 0);
+      const prepWant = q.types.prep ? Math.round(settings.count / typeCount) : 0;
+      const preps = byPriority(PREPS.map(p => p.id)).slice(0, prepWant);
+      const words = wordTypes ? byPriority(wordIds(q.topic)).slice(0, settings.count - preps.length) : [];
+      ids = shuffle(words.concat(preps));
+    }
+    if (!ids.length) return;
+    q.qs = ids.map(id => makeQuestion(id, pickWordType(q.types)));
+    q.i = 0; q.chosen = null; q.right = 0; q.wrongIds = [];
+    q.phase = 'run';
+    state.view = 'quiz';
+    render();
+  }
+  function renderQuiz() {
+    const q = state.quiz;
+    if (q.phase === 'setup') {
+      const opts = '<option value="">全部主題</option>' + TOPICS.map(t => '<option' + (t === q.topic ? ' selected' : '') + '>' + esc(t) + '</option>').join('');
+      const any = q.types.en2zh || q.types.zh2en || q.types.prep;
+      const wordOn = q.types.en2zh || q.types.zh2en;
+      return '<h2>測驗</h2>' +
+        '<div class="field"><span class="muted small">題型（可複選）</span><div class="checks" style="margin-top:4px">' +
+          ['en2zh', 'zh2en', 'prep'].map(k => '<label><input type="checkbox" data-bind="quiz-type" value="' + k + '"' + (q.types[k] ? ' checked' : '') + '>' + TYPE_NAME[k] + '</label>').join('') +
+        '</div></div>' +
+        '<label class="field" style="margin-top:14px"><span>單字主題' + (wordOn ? '' : '（未選單字題型）') + '</span><select data-bind="quiz-topic"' + (wordOn ? '' : ' disabled') + '>' + opts + '</select></label>' +
+        '<p class="muted small">每輪 ' + settings.count + ' 題，優先出待複習與還沒學過的題目。答錯的會自動加入錯題本。</p>' +
+        '<button class="btn" data-act="quiz-start"' + (any ? '' : ' disabled') + '>開始測驗</button>' +
+        '<p class="muted small" style="margin-top:20px">操作：按 1～4 作答，Enter 下一題。</p>';
+    }
+    if (q.phase === 'done') {
+      const total = q.qs.length;
+      const pct = Math.round(q.right / total * 100);
+      let html = '<h2>測驗結果</h2><div class="score">' + q.right + ' / ' + total + '<span class="muted small">　' + pct + '%</span></div>';
+      if (q.wrongIds.length) {
+        html += '<h3>答錯的題目</h3>' + mistakeTable(q.wrongIds, false);
+      } else {
+        html += '<p style="margin-top:12px">全部答對。</p>';
+      }
+      html += '<div class="row" style="margin-top:20px">' +
+        (q.wrongIds.length ? '<button class="btn" data-act="quiz-retry-wrong">只練這些錯題</button>' : '') +
+        '<button class="btn ' + (q.wrongIds.length ? 'secondary' : '') + '" data-act="quiz-again">再來一輪</button>' +
+        '<button class="btn plain" data-act="go" data-view="home">回首頁</button></div>';
+      return html;
+    }
+    const cur = q.qs[q.i];
+    const answered = q.chosen !== null;
+    let html = '<div class="progress-line"><span>第 ' + (q.i + 1) + ' / ' + q.qs.length + ' 題　<span class="qtype">' + TYPE_NAME[cur.type] + '</span></span>' +
+      '<button class="linkbtn" data-act="quiz-quit">結束測驗</button></div>';
+    if (cur.type === 'prep') {
+      const blank = answered ? '<span class="blank filled">' + esc(cur.answer) + '</span>' : '<span class="blank">&nbsp;</span>';
+      const parts = cur.sentence.split('___');
+      html += '<div class="prompt sentence">' + esc(parts[0]) + blank + esc(parts.slice(1).join('___')) + '</div>';
+      if (answered) html += speakBtn(cur.sentence.replace('___', cur.answer), '念句子');
+    } else {
+      html += '<div class="prompt">' + esc(cur.prompt) + '</div><div><span class="pos">' + esc(cur.pos) + '</span> ' +
+        (cur.type === 'en2zh' ? speakBtn(cur.prompt) : '') + '</div>';
+    }
+    html += '<div class="options">' + cur.options.map((o, i) => {
+      let cls = 'opt';
+      if (answered) {
+        if (o === cur.answer) cls += ' correct';
+        else if (i === q.chosen) cls += ' wrong';
+      }
+      return '<button class="' + cls + '" data-act="answer" data-i="' + i + '"' + (answered ? ' disabled' : '') + '><span class="k">' + (i + 1) + '</span>' + esc(o) + '</button>';
+    }).join('') + '</div>';
+    if (answered) {
+      const ok = cur.options[q.chosen] === cur.answer;
+      const it = ITEM[cur.id];
+      html += '<div class="feedback"><div class="res ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '答對了' : '答錯了，正確答案是 ' + esc(cur.answer)) + '</div>';
+      if (cur.type === 'prep') {
+        html += '<div>' + esc(cur.note) + '</div>';
+      } else {
+        html += '<div><b>' + esc(it.word) + '</b> <span class="pos">' + esc(it.pos) + '</span> ' + esc(it.zh) + ' ' + (cur.type === 'zh2en' ? speakBtn(it.word) : '') + '</div>' +
+          '<div class="ex">' + esc(it.example) + '</div><div class="exzh">' + esc(it.exampleZh) + '</div>';
+      }
+      html += '</div><div class="next-row"><button class="btn" data-act="quiz-next">' + (q.i + 1 < q.qs.length ? '下一題' : '看結果') + '<kbd style="color:#dfe6f1;border-color:#5a7bab">Enter</kbd></button></div>';
+    }
+    return html;
+  }
+  function answerQuiz(i) {
+    const q = state.quiz;
+    if (q.phase !== 'run' || q.chosen !== null) return;
+    const cur = q.qs[q.i];
+    if (i < 0 || i >= cur.options.length) return;
+    q.chosen = i;
+    const ok = cur.options[i] === cur.answer;
+    if (ok) q.right++; else q.wrongIds.push(cur.id);
+    grade(cur.id, ok ? 'good' : 'again');
+    render();
+  }
+  function nextQuiz() {
+    const q = state.quiz;
+    if (q.phase !== 'run' || q.chosen === null) return;
+    q.i++;
+    q.chosen = null;
+    if (q.i >= q.qs.length) q.phase = 'done';
+    render();
+  }
+
+  // ---------- 錯題本 ----------
+  function mistakeTable(ids, withActions) {
+    const rows = ids.map(id => {
+      const it = ITEM[id], p = progress[id] || {};
+      const main = it.kind === 'word'
+        ? '<b>' + esc(it.word) + '</b> <span class="pos">' + esc(it.pos) + '</span><br><span class="small">' + esc(it.zh) + '</span>'
+        : '<span class="small">' + esc(it.sentence).replace('___', '<b>' + esc(it.answer) + '</b>') + '</span><br><span class="small muted">' + esc(it.note) + '</span>';
+      return '<tr><td>' + main + '</td>' +
+        (withActions ? '<td class="n">' + (p.wrong || 0) + '</td><td class="n"><button class="btn plain small" data-act="mistake-remove" data-id="' + esc(id) + '">移出</button></td>' : '') +
+        '</tr>';
+    }).join('');
+    return '<table class="list">' +
+      (withActions ? '<tr><th>題目</th><th class="n">錯誤次數</th><th></th></tr>' : '') + rows + '</table>';
+  }
+  function mistakeIds() {
+    const f = state.mistakeFilter;
+    return Object.keys(progress)
+      .filter(id => ITEM[id] && progress[id].wrong > 0 && (f === 'all' || ITEM[id].kind === f))
+      .sort((a, b) => progress[b].wrong - progress[a].wrong);
+  }
+  function renderMistakes() {
+    const ids = mistakeIds();
+    const f = state.mistakeFilter;
+    const tab = (k, name) => '<button class="' + (f === k ? 'on' : '') + '" data-act="mistake-filter" data-f="' + k + '">' + name + '</button>';
+    let html = '<h2>錯題本</h2>' +
+      '<div class="tabs">' + tab('all', '全部') + tab('word', '單字') + tab('prep', '介係詞') + '</div>';
+    if (!ids.length) return html + '<div class="empty">目前沒有錯題。</div>';
+    html += '<div class="row" style="margin-bottom:12px"><button class="btn" data-act="mistake-quiz">錯題測驗（' + Math.min(ids.length, settings.count) + ' 題）</button>' +
+      '<span class="muted small">錯題答對後不會自動移出，覺得熟了再按「移出」。</span></div>' +
+      mistakeTable(ids, true);
+    return html;
+  }
+
+  // ---------- 設定 ----------
+  function renderSettings() {
+    return '<h2>設定</h2>' +
+      '<div class="panel">' +
+        '<label class="field"><span>每輪題數（單字卡與測驗）</span><select data-bind="count">' +
+          [10, 20, 30, 50].map(n => '<option value="' + n + '"' + (settings.count === n ? ' selected' : '') + '>' + n + '</option>').join('') +
+        '</select></label>' +
+        (canSpeak
+          ? '<div class="checks"><label><input type="checkbox" data-bind="autoSpeak"' + (settings.autoSpeak ? ' checked' : '') + '>單字卡出現時自動念單字</label></div>'
+          : '<p class="muted small">這個瀏覽器不支援語音，發音功能已隱藏。</p>') +
+      '</div>' +
+      '<div class="panel">' +
+        '<h3 style="margin-top:0">學習進度</h3>' +
+        '<p class="muted small">進度只存在這台裝置的這個瀏覽器。換電腦或手機前，先匯出成檔案，再到新裝置匯入。</p>' +
+        '<div class="row"><button class="btn secondary" data-act="export">匯出進度</button>' +
+        '<button class="btn secondary" data-act="import">匯入進度</button>' +
+        '<button class="btn danger" data-act="reset">清除所有進度</button></div>' +
+      '</div>' +
+      '<p class="muted small">題庫：單字 ' + WORDS.length + ' 個（' + TOPICS.length + ' 個主題）、介係詞 ' + PREPS.length + ' 題。要增修內容請編輯 data 資料夾裡的 words.js 和 preps.js。</p>';
+  }
+  function exportProgress() {
+    const data = JSON.stringify({ app: 'toeic', version: 1, exported: today(), progress, settings }, null, 2);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+    a.download = 'toeic-進度-' + today() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+  function importProgress(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try { data = JSON.parse(reader.result); } catch (e) { alert('檔案格式不正確，無法讀取。'); return; }
+      const p = data && data.progress;
+      if (!p || typeof p !== 'object' || Array.isArray(p)) { alert('這個檔案裡沒有學習進度。'); return; }
+      const clean = {};
+      for (const [id, v] of Object.entries(p)) {
+        if (v && typeof v.box === 'number' && typeof v.due === 'string') {
+          clean[id] = { box: Math.min(5, Math.max(1, v.box | 0)), due: v.due, wrong: v.wrong | 0, last: v.last || v.due };
+        }
+      }
+      if (!confirm('要用這個檔案的 ' + Object.keys(clean).length + ' 筆進度取代目前的進度嗎？')) return;
+      progress = clean;
+      saveJSON(PKEY, progress);
+      if (data.settings && typeof data.settings === 'object') {
+        settings = Object.assign(settings, data.settings);
+        saveJSON(SKEY, settings);
+      }
+      alert('匯入完成。');
+      render();
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- 事件 ----------
+  document.addEventListener('click', e => {
+    const say = e.target.closest('[data-say]');
+    if (say) { e.stopPropagation(); speak(say.dataset.say); return; }
+    const el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    const act = el.dataset.act;
+    switch (act) {
+      case 'go':
+        state.view = el.dataset.view;
+        if (state.view === 'cards' && state.cards.phase === 'done') state.cards.phase = 'setup';
+        if (state.view === 'quiz' && state.quiz.phase === 'done') state.quiz.phase = 'setup';
+        render();
+        window.scrollTo(0, 0);
+        break;
+      case 'home-cards':
+        state.cards.topic = '';
+        if (cardsCounts('').due + cardsCounts('').fresh) startCards('', false);
+        else { state.view = 'cards'; state.cards.phase = 'setup'; render(); }
+        break;
+      case 'home-preps':
+        state.quiz.types = { en2zh: false, zh2en: false, prep: true };
+        startQuiz();
+        break;
+      case 'cards-start': startCards(state.cards.topic, false); break;
+      case 'cards-free': startCards(state.cards.topic, true); break;
+      case 'cards-again': state.cards.phase = 'setup'; render(); break;
+      case 'cards-quit': state.cards.phase = state.cards.i > 0 ? 'done' : 'setup'; render(); break;
+      case 'flip': flipCard(); break;
+      case 'grade': gradeCard(el.dataset.r); break;
+      case 'quiz-start': startQuiz(); break;
+      case 'quiz-again': state.quiz.phase = 'setup'; render(); break;
+      case 'quiz-retry-wrong': startQuiz({ ids: state.quiz.wrongIds }); break;
+      case 'quiz-quit':
+        state.quiz.qs = state.quiz.qs.slice(0, state.quiz.i + (state.quiz.chosen !== null ? 1 : 0));
+        state.quiz.phase = state.quiz.qs.length ? 'done' : 'setup';
+        render();
+        break;
+      case 'answer': answerQuiz(+el.dataset.i); break;
+      case 'quiz-next': nextQuiz(); window.scrollTo(0, 0); break;
+      case 'mistake-filter': state.mistakeFilter = el.dataset.f; render(); break;
+      case 'mistake-quiz': startQuiz({ ids: mistakeIds().slice(0, settings.count) }); break;
+      case 'mistake-remove':
+        if (progress[el.dataset.id]) { progress[el.dataset.id].wrong = 0; saveJSON(PKEY, progress); }
+        render();
+        break;
+      case 'export': exportProgress(); break;
+      case 'import': document.getElementById('import-file').click(); break;
+      case 'reset':
+        if (confirm('確定要清除所有學習進度嗎？此動作無法復原，建議先匯出備份。')) {
+          progress = {};
+          saveJSON(PKEY, progress);
+          render();
+        }
+        break;
+    }
+  });
+
+  document.addEventListener('change', e => {
+    const el = e.target;
+    switch (el.dataset.bind) {
+      case 'cards-topic': state.cards.topic = el.value; render(); break;
+      case 'quiz-topic': state.quiz.topic = el.value; break;
+      case 'quiz-type': state.quiz.types[el.value] = el.checked; render(); break;
+      case 'count': settings.count = +el.value; saveJSON(SKEY, settings); break;
+      case 'autoSpeak': settings.autoSpeak = el.checked; saveJSON(SKEY, settings); break;
+    }
+  });
+
+  document.getElementById('import-file').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) importProgress(f);
+    e.target.value = '';
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'select' || tag === 'input') return;
+    if (state.view === 'cards' && state.cards.phase === 'run') {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        if (!state.cards.flipped) flipCard();
+      } else if (state.cards.flipped && ['1', '2', '3'].includes(e.key)) {
+        gradeCard({ '1': 'again', '2': 'hard', '3': 'good' }[e.key]);
+      }
+    } else if (state.view === 'quiz' && state.quiz.phase === 'run') {
+      if (/^[1-4]$/.test(e.key)) answerQuiz(+e.key - 1);
+      else if (e.key === 'Enter') { e.preventDefault(); nextQuiz(); }
+    }
+  });
+
+  if (!WORDS.length && !PREPS.length) {
+    view.innerHTML = '<div class="empty">讀不到題庫。請確認 data 資料夾和 index.html 放在同一個位置。</div>';
+    return;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
